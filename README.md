@@ -1,5 +1,7 @@
 # publications
 
-**Collection of reports/articles/publications/etc of mine.**
+Collection of reports/articles/publications/etc of mine.
 
-_Publications are not neccessarily complete, I will put unfished work in here._
+- Publications are not neccessarily complete, **I will put unfished work in here**.
+
+- **Pull requests** implementing spelling/grammar fixes and/or minor clarifications **are welcome**.
