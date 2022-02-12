@@ -1,0 +1,109 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{\textbf{Analyzing Fixed Point Arithmetic Rounding Error}}
+\author{Transmissions11}
+\date{February 2022}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+We examine the magnitude of rounding error resulting from different combinations of fixed point arithmetic operations used to achieve the same goal, in an environment with truncating integer semantics.
+
+\end{abstract}
+
+\tableofcontents
+
+\section{Definitions}
+
+\subsubsection{Epsilon Notation}
+
+By definition of the floor operation, the following is true:
+
+$$ \frac{x}{y} - 1 < \left\lfloor\frac{x}{y}\right\rfloor \leq \frac{x}{y} $$
+
+To simplify the inequality above for use in larger expressions, we will define epsilon ($\epsilon$) as a non-deterministic number in the interval $[0, 1)$. Using this new notation, we can rewrite the inequality above like so:
+
+$$ \frac{x}{y} - \epsilon = \left\lfloor\frac{x}{y}\right\rfloor $$
+
+\section{Analysis}
+
+A common use case for fixed point arithmetic is multiplying a quantity of one asset by a conversion rate to another asset, in a programming language with no floating point arithmetic, only integer operations. A notable example of a language with these properties is the Solidity smart contract language, which only has basic truncating integer operations.
+
+\subsection{Introduction}
+
+Let $\sigma_n$ be an arbitrary quantity of asset A that we wish to exchange for a quantity of asset B, $\mu_n$. The rate of exchange between asset A and asset B is defined as the ratio between the separate quantities of $\mu$ and $\sigma$. 
+
+Below we will define and analyze multiple implementations of the desired function, $\mbox{to}_\mu(\sigma_n)$, which takes a quantity of asset A ($\sigma_n$) and returns the amount of asset B that the quantity of asset A is worth ($\mu_n$) using the rate of exchange formula described briefly above ($\frac{\mu}{\sigma}$).
+
+\subsection{Fixed Loss Implementation}
+
+In an environment without truncating division, we can observe that these two implementations are equivalent:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \sigma_n \cdot \frac{\mu}{\sigma} = \frac{\sigma_n\mu}{\sigma} $$
+
+However, in an environment with truncating division, these implementations differ:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \sigma_n \cdot \left\lfloor\frac{\mu}{\sigma}\right\rfloor \leq \left\lfloor\frac{\sigma_n\mu}{\sigma}\right\rfloor $$
+
+Rewriting using the epsilon notation introduced earlier:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \sigma_n \cdot \left(\frac{\mu}{\sigma} - \epsilon\right) \leq \frac{\sigma_n\mu}{\sigma} - \epsilon $$
+
+Distributing multiplication:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \frac{\mu}{\sigma}\sigma_n - \epsilon\sigma_n \leq \frac{\sigma_n\mu}{\sigma} - \epsilon $$
+
+
+Now, with the expressions fully expanded, we can see why this simple advice is so effective. Compared to the scaled rounding loss in the left equation ($\epsilon\sigma_n$), where rounding error is unbounded, rounding error in the equation on the right is bounded between $[0, 1)$.
+
+\newpage
+
+\subsection{Fixed Point Arithmetic Implementations}
+
+\subsubsection{$\sigma_n.fmul(\mu.fdiv(\sigma))$}
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \left\lfloor\frac{\left\lfloor\frac{\mu \cdot 10^{18}}{\sigma}\right\rfloor \cdot \sigma_n}{10^{18}}\right\rfloor $$
+
+Using epsilon notation:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \frac{(\frac{\mu \cdot 10^{18}}{\sigma} - \epsilon) \cdot \sigma_n}{10^{18}} - \epsilon $$
+
+Simplified:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \frac{\mu\sigma_n}{\sigma} - \frac{\epsilon\sigma_n}{10^{18}} - \epsilon $$
+
+Error scales proportionally with $\sigma_n$.
+
+\subsubsection{$\sigma_n.fmul(\mu).fdiv(\sigma)$}
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \left\lfloor\frac{\left\lfloor\frac{\sigma_n \cdot \mu}{10^{18}}\right\rfloor \cdot 10^{18}}{\sigma}\right\rfloor $$
+
+Epsilon notation:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \frac{\left(\frac{\sigma_n \cdot \mu}{10^{18}} - \epsilon\right) \cdot 10^{18}}{\sigma} - \epsilon $$
+
+Simplified:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \frac{\mu\sigma_n}{\sigma} - \frac{\epsilon10^{18}}{\sigma} - \epsilon$$
+
+Error is inversely proportional with $\sigma$.
+
+\subsubsection{$\sigma_n.fdiv(\sigma).fmul(\mu)$}
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \left\lfloor\frac{\left\lfloor\frac{\sigma_n \cdot 10^{18}}{\sigma}\right\rfloor \cdot \mu}{10^{18}}\right\rfloor $$
+
+Epsilon notation:
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \frac{\left(\frac{\sigma_n \cdot 10^{18}}{\sigma} - \epsilon\right) \cdot \mu}{10^{18}} - \epsilon $$
+
+Simplified: 
+
+$$ \mu_n = \mbox{to}_\mu(\sigma_n) = \frac{\mu\sigma_n}{\sigma} - \frac{\epsilon\mu}{10^{18}} - \epsilon $$
+
+Error scales proportionally with $\mu$.
+
+\end{document}
