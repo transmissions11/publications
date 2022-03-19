@@ -1,3 +1,5 @@
+% TODO: more context on the task, conclusions, charts, use begin instead of inline, maybe delta instead of sigma_n, etc
+
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 
@@ -58,7 +60,9 @@ Distributing multiplication:
 $$ \mu_n = \mbox{to}_\mu(\sigma_n) = \frac{\mu}{\sigma}\sigma_n - \epsilon\sigma_n \leq \frac{\sigma_n\mu}{\sigma} - \epsilon $$
 
 
-Now, with the expressions fully expanded, we can see why this simple advice is so effective. Compared to the scaled rounding loss in the left equation ($\epsilon\sigma_n$), where rounding error is unbounded, rounding error in the equation on the right is bounded between $[0, 1)$.
+Now, with the expressions fully expanded, we can easily observe that the expression where multiplication is performed before division is a much better approximation of the pure, non-truncating exchange rate formula.
+
+Compared to the scaled rounding loss in the left equation ($\epsilon\sigma_n$), where rounding error is unbounded, rounding error in the equation on the right is bounded between $[0, 1)$.
 
 \newpage
 
